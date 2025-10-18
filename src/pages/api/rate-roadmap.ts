@@ -1,20 +1,25 @@
 import type { APIRoute } from 'astro';
 
 const STRAPI_URL = import.meta.env.STRAPI_API_URL;
+const STRAPI_TOKEN = import.meta.env.STRAPI_API_TOKEN;
 
 export const POST: APIRoute = async ({ request }) => {
     try {
-        const { roadmapDocumentId, type } = await request.json(); 
+        const { roadmapDocumentId, type } = await request.json();
 
         if (!roadmapDocumentId || !type) {
             return new Response(JSON.stringify({ message: "ID Roadmap dan tipe rating dibutuhkan" }), { status: 400 });
         }
 
-        const getResponse = await fetch(`${STRAPI_URL}/api/roadmaps/${roadmapDocumentId}`);
+        const getResponse = await fetch(`${STRAPI_URL}/api/roadmaps/${roadmapDocumentId}`, {
+            headers: {
+                'Authorization': `Bearer ${STRAPI_TOKEN}`
+            }
+        });
         if (!getResponse.ok) throw new Error("Roadmap tidak ditemukan");
 
         const { data } = await getResponse.json();
-        
+
         let { likes, dislikes } = data;
 
         if (type === 'like') {
@@ -25,7 +30,10 @@ export const POST: APIRoute = async ({ request }) => {
 
         const updateResponse = await fetch(`${STRAPI_URL}/api/roadmaps/${roadmapDocumentId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${STRAPI_TOKEN}`
+            },
             body: JSON.stringify({
                 data: {
                     likes,

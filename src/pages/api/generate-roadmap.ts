@@ -4,15 +4,16 @@ import slugify from 'slugify';
 
 const openai = new OpenAI({ apiKey: import.meta.env.OPENAI_API_KEY });
 const STRAPI_URL = import.meta.env.STRAPI_API_URL;
+const STRAPI_TOKEN = import.meta.env.STRAPI_API_TOKEN;
 
 export const POST: APIRoute = async ({ request }) => {
-    try {
-        const { topic } = await request.json();
-        if (!topic) {
-            return new Response(JSON.stringify({ message: "Topic is required" }), { status: 400 });
-        }
+  try {
+    const { topic } = await request.json();
+    if (!topic) {
+      return new Response(JSON.stringify({ message: "Topic is required" }), { status: 400 });
+    }
 
-        const prompt = `
+    const prompt = `
       Anda adalah seorang ahli kurikulum dan instruktur berpengalaman.
       Tugas Anda adalah membuat sebuah roadmap belajar yang jelas untuk topik: "${topic}".
       
@@ -45,61 +46,68 @@ export const POST: APIRoute = async ({ request }) => {
       Pastikan ada antara 5-7 langkah dalam array 'steps'. Setiap langkah harus memiliki 1-2 resources.
     `;
 
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: prompt }],
-            response_format: { type: "json_object" },
-        });
-        const aiResponse = completion.choices[0].message.content;
-        if (!aiResponse) throw new Error("Respons dari AI kosong.");
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      response_format: { type: "json_object" },
+    });
+    const aiResponse = completion.choices[0].message.content;
+    if (!aiResponse) throw new Error("Respons dari AI kosong.");
 
-        const roadmapData = JSON.parse(aiResponse);
+    const roadmapData = JSON.parse(aiResponse);
 
-        let categoryId;
-        const categoryName = roadmapData.category;
+    let categoryId;
+    const categoryName = roadmapData.category;
 
-        // Cari apakah kategori sudah ada
-        const existingCategoryResponse = await fetch(`${STRAPI_URL}/api/categories?filters[name][$eqi]=${categoryName}`);
-        const existingCategoryData = await existingCategoryResponse.json();
+    // Cari apakah kategori sudah ada
+    const existingCategoryResponse = await fetch(`${STRAPI_URL}/api/categories?filters[name][$eqi]=${categoryName}`, {
+      headers: {
+        'Authorization': `Bearer ${STRAPI_TOKEN}`
+      }
+    });
+    const existingCategoryData = await existingCategoryResponse.json();
 
-        if (existingCategoryData.data && existingCategoryData.data.length > 0) {
-            categoryId = existingCategoryData.data[0].id;
-        } else {
-            // Jika tidak ada, buat kategori baru
-            const newCategoryResponse = await fetch(`${STRAPI_URL}/api/categories`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: { name: categoryName } }),
-            });
-            const newCategoryData = await newCategoryResponse.json();
-            categoryId = newCategoryData.data.id;
-        }
-
-        const slug = slugify(roadmapData.title, { lower: true, strict: true });
-        const dataToSave = {
-            title: roadmapData.title,
-            description: roadmapData.description,
-            steps: roadmapData.steps, // Simpan sebagai JSON
-            slug: slug,
-            category: categoryId, // Hubungkan dengan ID kategori
-        };
-
-        const strapiResponse = await fetch(`${STRAPI_URL}/api/roadmaps`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: dataToSave }),
-        });
-
-        if (!strapiResponse.ok) {
-            const errorData = await strapiResponse.json();
-            console.error("Strapi Error:", errorData.error);
-            throw new Error(`Gagal menyimpan ke Strapi: ${strapiResponse.statusText}`);
-        }
-
-        return new Response(JSON.stringify({ slug }), { status: 200 });
-
-    } catch (error) {
-        console.error(error);
-        return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+    if (existingCategoryData.data && existingCategoryData.data.length > 0) {
+      categoryId = existingCategoryData.data[0].id;
+    } else {
+      // Jika tidak ada, buat kategori baru
+      const newCategoryResponse = await fetch(`${STRAPI_URL}/api/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${STRAPI_TOKEN}` 
+        },
+        body: JSON.stringify({ data: { name: categoryName } }),
+      });
+      const newCategoryData = await newCategoryResponse.json();
+      categoryId = newCategoryData.data.id;
     }
+
+    const slug = slugify(roadmapData.title, { lower: true, strict: true });
+    const dataToSave = {
+      title: roadmapData.title,
+      description: roadmapData.description,
+      steps: roadmapData.steps, // Simpan sebagai JSON
+      slug: slug,
+      category: categoryId, // Hubungkan dengan ID kategori
+    };
+
+    const strapiResponse = await fetch(`${STRAPI_URL}/api/roadmaps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: dataToSave }),
+    });
+
+    if (!strapiResponse.ok) {
+      const errorData = await strapiResponse.json();
+      console.error("Strapi Error:", errorData.error);
+      throw new Error(`Gagal menyimpan ke Strapi: ${strapiResponse.statusText}`);
+    }
+
+    return new Response(JSON.stringify({ slug }), { status: 200 });
+
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ message: "Internal Server Error" }), { status: 500 });
+  }
 };
