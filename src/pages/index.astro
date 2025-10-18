@@ -17,7 +17,6 @@ interface Roadmap {
 const STRAPI_URL = import.meta.env.STRAPI_API_URL;
 let roadmaps: Roadmap[] = [];
 try {
-  // Gunakan populate untuk mengambil data kategori
   const response = await fetch(
     `${STRAPI_URL}/api/roadmaps?sort=createdAt:desc&populate=category`
   );
@@ -25,7 +24,6 @@ try {
   if (response.ok) {
     const { data } = await response.json();
     roadmaps = data;
-    console.log(roadmaps);
   }
 } catch (error) {
   console.error("Gagal mengambil data roadmap dari Strapi:", error);
@@ -346,7 +344,6 @@ try {
     : [];
   const noResultsMessage = document.getElementById("no-results-message");
 
-  // Pastikan searchBox adalah sebuah HTMLInputElement
   if (searchBox instanceof HTMLInputElement) {
     searchBox.addEventListener("input", (e) => {
       const target = e.target as HTMLInputElement;

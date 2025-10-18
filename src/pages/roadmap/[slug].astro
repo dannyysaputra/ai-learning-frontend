@@ -11,11 +11,11 @@ interface Step {
   resources: Resource[];
 }
 interface Roadmap {
-  id: number; // Kita butuh ID untuk rating
+  id: number; 
   documentId: string;
   title: string;
   description: string;
-  steps: Step[]; // Tipe steps sekarang adalah array of Step
+  steps: Step[]; 
   likes: number;
   dislikes: number;
 }
@@ -43,8 +43,7 @@ if (!data || data.length === 0) {
   return Astro.redirect("/404");
 }
 
-const roadmap: Roadmap = data[0]; // Kita ambil seluruh object termasuk ID
-console.log(roadmap);
+const roadmap: Roadmap = data[0]; 
 ---
 
 <Layout title={roadmap.title}>
@@ -222,8 +221,6 @@ console.log(roadmap);
 
         const updatedRoadmap = await response.json();
 
-        console.log("updatedRoadmapFromClick", updatedRoadmap);
-
         // Perbarui tampilan dengan data baru
         if (likesCountEl) likesCountEl.textContent = updatedRoadmap.likes;
         if (dislikesCountEl)
@@ -232,7 +229,6 @@ console.log(roadmap);
           ratingFeedbackEl.textContent = "Terima kasih atas masukan Anda!";
       } catch (error) {
         console.error(error);
-        console.log(error.message);
 
         if (ratingFeedbackEl)
           ratingFeedbackEl.textContent = "Gagal menyimpan. Coba lagi.";

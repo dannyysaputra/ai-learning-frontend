@@ -4,9 +4,7 @@ const STRAPI_URL = import.meta.env.STRAPI_API_URL;
 
 export const POST: APIRoute = async ({ request }) => {
     try {
-        const { roadmapDocumentId, type } = await request.json(); // type akan 'like' or 'dislike'
-        console.log(roadmapDocumentId, type);
-
+        const { roadmapDocumentId, type } = await request.json(); 
 
         if (!roadmapDocumentId || !type) {
             return new Response(JSON.stringify({ message: "ID Roadmap dan tipe rating dibutuhkan" }), { status: 400 });
@@ -16,21 +14,13 @@ export const POST: APIRoute = async ({ request }) => {
         if (!getResponse.ok) throw new Error("Roadmap tidak ditemukan");
 
         const { data } = await getResponse.json();
-        console.log("Data from response:", data);
         
         let { likes, dislikes } = data;
 
-        // const roadmapData = await getResponse.json();
-        // console.log("Roadmap Data:", roadmapData);
-
-        // let { likes, dislikes } = roadmapData;
-
         if (type === 'like') {
             likes++;
-            console.log("Update like:", likes);
         } else if (type === 'dislike') {
             dislikes++;
-            console.log("Update like:", dislikes);
         }
 
         const updateResponse = await fetch(`${STRAPI_URL}/api/roadmaps/${roadmapDocumentId}`, {
@@ -45,9 +35,6 @@ export const POST: APIRoute = async ({ request }) => {
         });
 
         if (!updateResponse.ok) throw new Error("Gagal memperbarui rating");
-
-        console.log("Update Response: ", updateResponse);
-
 
         return new Response(JSON.stringify({ likes, dislikes }), {
             status: 200,
