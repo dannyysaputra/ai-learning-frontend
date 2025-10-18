@@ -75,7 +75,7 @@ export const POST: APIRoute = async ({ request }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${STRAPI_TOKEN}` 
+          'Authorization': `Bearer ${STRAPI_TOKEN}`
         },
         body: JSON.stringify({ data: { name: categoryName } }),
       });
@@ -94,7 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const strapiResponse = await fetch(`${STRAPI_URL}/api/roadmaps`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STRAPI_TOKEN}` },
       body: JSON.stringify({ data: dataToSave }),
     });
 
