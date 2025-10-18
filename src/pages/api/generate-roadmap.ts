@@ -138,7 +138,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(
       JSON.stringify({
         message: "Roadmap berhasil dibuat",
-        slug: saved.data.attributes.slug,
+        slug: saved.data.slug,
         id: saved.data.id,
       }),
       { status: 200 }
